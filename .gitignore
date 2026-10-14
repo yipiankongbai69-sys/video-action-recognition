@@ -1,0 +1,28 @@
+# Python caches and local environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.pytest_cache/
+.ipynb_checkpoints/
+.idea/
+.vscode/
+
+# Local runtime outputs
+*.log
+.DS_Store
+Thumbs.db
+videos/
+UCF-101/
+UCF101/
+datasets/
+checkpoints/*.pth
+checkpoints/*.pt
+checkpoints/*.ckpt
+
+# Credentials and local configuration
+.env
+.env.*
+!.env.example
+*.key

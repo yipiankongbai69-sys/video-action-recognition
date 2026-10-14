@@ -1,66 +1,84 @@
 # Video Action Recognition — ResNet18 + Temporal Average Pooling
 
-A PyTorch prototype for **four selected UCF101 classes**: PushUps, JumpRope, Biking, PlayingGuitar. Independent learning and experimental analysis project; **not a 101-class benchmark**.
+A PyTorch prototype for **four selected UCF101 classes**: `PushUps`, `JumpRope`, `Biking`, `PlayingGuitar`. Built as an independent learning and experimental analysis project. **This is not a 101-class UCF101 benchmark result.**
 
-## Method
-Video → 8 uniformly sampled frames → pretrained ResNet18 frame encoder → temporal mean pooling → linear four-class classifier (2,052 trainable parameters). The current model does **not** explicitly model temporal order.
+## Approach
+
+`Video → uniform frame sampling (8) → ResNet18 (512-D feature per frame) → temporal mean pooling → linear classifier → four logits`
+
+The backbone uses pretrained ImageNet ResNet18 weights during initial training; during local inference, the full trained checkpoint restores the backbone and classifier. The final linear layer has 2,052 trainable parameters. The mean-pooling model **does not explicitly model frame order**.
 
 ## Results
 
-| Frames | Validation accuracy (81 videos) | Validation loss | Model-only latency |
+| Frame count | Selected-checkpoint validation accuracy (81 videos) | Validation loss | Model-only forward latency |
 |---|---:|---:|---:|
 | 1 | 95.06% | 0.1989 | 4.84 ms |
 | 4 | 95.06% | 0.1872 | 9.49 ms |
 | 8 | 96.30% | 0.1676 | 15.60 ms |
 
-Eight-frame Mean Logits accuracy on the **149-video four-class held-out test set**: **148/149 (99.33%)**. A post-hoc aggregation exploration gave Mean Softmax 148/149 and Majority Vote 149/149; the latter is **not an independently validated improvement**, because it was tried after examining test errors.
+On a **149-video held-out four-class test set**, the eight-frame Mean Logits classifier predicted **148/149 (99.33%)** correctly. A subsequent **exploratory, test-set-informed** comparison obtained 148/149 with Mean Softmax and 149/149 with Majority Vote. Because voting was investigated *after* inspecting test errors, 149/149 is **not** an unbiased, independently confirmed improvement.
 
-Model-only latency excludes video decoding and preprocessing. Frame-count experiments were not repeated across multiple random seeds.
+The latency figures measure **model forward execution**, not full decoding, preprocessing or user-interface time. They are environment-specific. Frame-count runs were not repeated across multiple random seeds.
 
-## Installation
+## Requirements and installation
 
-Python 3.10+ with compatible PyTorch and Torchvision versions.
+Python 3.10+ and compatible PyTorch/Torchvision versions. Create a virtual environment, then:
 
 ```bash
 python -m pip install -r requirements.txt
 ```
 
-## Checkpoint and local demo
+## Model checkpoint
 
-Place a **trusted** training checkpoint at `checkpoints/best_8frames.pth`. The public-ready project intentionally excludes the approximately 45 MB checkpoint and UCF101 videos. The checkpoint dictionary should contain `model_state_dict` and `class_to_idx`.
+Download or copy **your own trusted** trained checkpoint to `checkpoints/best_8frames.pth`. The public repository intentionally excludes the ~45 MB `.pth` file. It expects a dictionary containing `model_state_dict` and `class_to_idx` (and optionally `num_frames`). `app.py` loads this checkpoint on startup. Do not execute unknown/untrusted PyTorch checkpoints.
+
+## Run interactive local demo
 
 ```bash
 python app.py
 ```
 
-Upload a video and choose Mean Logits, Mean Softmax, or Majority Vote.
+Upload a video and choose **Mean Logits**, **Mean Softmax**, or **Majority Vote**. A CPU fallback is available when CUDA is unavailable.
 
-## Evaluation
+## Reproduce evaluation with your own UCF101 dataset
 
-Obtain UCF101 separately. Set `UCF101_DIR` to your local UCF-101 root directory and run:
+The actual UCF101 video dataset is **not provided**. Set `UCF101_DIR` to your local root directory containing class folders:
 
-```bash
+**PowerShell**:
+```powershell
+$env:UCF101_DIR = 'D:\Datasets\UCF-101'
 python prepare_testset.py
 python evaluate.py
 python evaluate_aggregation.py
 ```
 
-The repository includes relative-path manifests and the official test split listing; it does not redistribute UCF101 video files. Set `ERROR_VIDEO_PATH` for the original misclassified clip when using `analyze_frame_scores.py` or `visualize_error.py`.
+**Linux / macOS**:
+```bash
+export UCF101_DIR='/path/to/UCF-101'
+python prepare_testset.py
+python evaluate.py
+python evaluate_aggregation.py
+```
 
-## Files
+The manifest `splits/test_manifest.csv` uses paths relative to `UCF101_DIR`. The official UCF101 test split listing is in `splits/testlist01.txt`. The commands above require the exact UCF101 dataset layout and a checkpoint for the four classes.
 
-- `model.py` — model architecture and checkpoint loading
-- `predict.py` — video preprocessing and model inference
-- `app.py` — Gradio UI and aggregation strategies
-- `prepare_testset.py` — four-class test manifest
-- `evaluate.py` and `evaluate_aggregation.py` — model evaluation
-- `analyze_frame_scores.py`, `analyze_errors.py`, `visualize_error.py` — error analysis
-- `results/` — evaluation tables without local absolute paths
+For the original misclassified clip, set `ERROR_VIDEO_PATH` to its absolute path before running `analyze_frame_scores.py` or `visualize_error.py`.
 
-## Limitations
+## Repository guide
 
-Only four UCF101 classes, limited held-out sample size, no multi-seed repeat, frame-order-invariant mean pooling, and sampling position differences across frame counts. Future work: repeated experiments, paired predictions, improved temporal modelling and end-to-end latency analysis.
+- `model.py`: ResNet18 frame encoder, temporal averaging and classifier
+- `predict.py`: RGB video decoding, sampling, preprocessing and inference
+- `app.py`: Gradio interface and alternative aggregation rules
+- `prepare_testset.py`: builds the selected-class evaluation manifest
+- `evaluate.py`: per-video evaluation and summary metrics
+- `evaluate_aggregation.py`: comparison of three video-level aggregation rules
+- `analyze_frame_scores.py`, `analyze_errors.py`, `visualize_error.py`: error analysis
+- `results/`: anonymised/portable experiment outputs, without machine-specific paths
 
-## Attribution
+## Limitations and next steps
 
-UCF101 remains an external research dataset; obtain it from the original source and observe its terms. PyTorch, Torchvision and other packages retain their respective licenses.
+This study uses only four of the 101 action classes, with a relatively small validation/test set. Temporal average pooling discards frame order. One-frame vs multiple-frame sampling also changes selected temporal positions. Further work includes multiple random seeds, paired per-video tests, temporal models, sampling ablations and true end-to-end latency evaluation.
+
+## Data and attribution
+
+UCF101 is an external research dataset: obtain it from its official source and comply with its terms. This repository excludes video data and does not claim rights to redistribute it. Torchvision / PyTorch and other dependencies retain their original licenses.
