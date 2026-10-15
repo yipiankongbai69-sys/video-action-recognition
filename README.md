@@ -30,7 +30,14 @@ python -m pip install -r requirements.txt
 
 ## Model checkpoint
 
-Download or copy **your own trusted** trained checkpoint to `checkpoints/best_8frames.pth`. The public repository intentionally excludes the ~45 MB `.pth` file. It expects a dictionary containing `model_state_dict` and `class_to_idx` (and optionally `num_frames`). `app.py` loads this checkpoint on startup. Do not execute unknown/untrusted PyTorch checkpoints.
+The trained eight-frame checkpoint is available as a separate GitHub Release asset:
+
+- **Release:** [v1.0.0 — Initial ResNet18 Model](https://github.com/yipiankongbai69-sys/video-action-recognition/releases/tag/v1.0.0)
+- **Model file:** [best_8frames.pth](https://github.com/yipiankongbai69-sys/video-action-recognition/releases/download/v1.0.0/best_8frames.pth) (approximately 42.7 MiB)
+
+Download the file and place it at `checkpoints/best_8frames.pth` (next to `checkpoints/README.md`). The app loads it from this path at startup. The checkpoint should contain `model_state_dict` and `class_to_idx` and may include `num_frames`.
+
+The `.pth` file is intentionally **not committed to Git history**. Use only trusted checkpoints; this model file has been uploaded as an asset, but clean-environment loading and end-to-end inference have not yet been independently verified.
 
 ## Run interactive local demo
 
