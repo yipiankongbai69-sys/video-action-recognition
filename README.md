@@ -22,11 +22,38 @@ The latency figures measure **model forward execution**, not full decoding, prep
 
 ## Requirements and installation
 
-Python 3.10+ and compatible PyTorch/Torchvision versions. Create a virtual environment, then:
+### Verified local environment (Windows / Conda)
 
-```bash
+The GitHub-cloned project successfully started Gradio and performed video inference on the original working Conda environment with:
+
+| Component | Observed version |
+|---|---|
+| Python | 3.11.17 |
+| PyTorch | 2.11.0+cu128 |
+| Torchvision | 0.26.0+cu128 |
+| Gradio | 6.30.0 |
+| OpenCV | 5.0.0 |
+| CUDA available | True |
+
+This verifies local inference in **an existing environment**, not a clean installation from scratch.
+
+### Creating a new Conda environment (not yet independently validated)
+
+```powershell
+conda env create -f environment.yml
+conda activate video-action-repro
+
+# For an NVIDIA CUDA 12.8 PyTorch wheel build:
+python -m pip install torch==2.11.0 torchvision==0.26.0 --index-url https://download.pytorch.org/whl/cu128
+
+# Install the remaining application requirements:
 python -m pip install -r requirements.txt
 ```
+
+The commands above aim to match the observed local PyTorch/CUDA build, but installation depends on platform and available official wheels. For a CPU-only or different CUDA setup, consult the [official PyTorch installation selector](https://pytorch.org/get-started/locally/) and choose compatible torch/torchvision packages instead. Run `python test_environment.py` before launching `python app.py`.
+
+The earlier `torch>=2.2` installation error occurred in a separately created `venv`; its root cause has not been established. An already-installed compatible Conda environment was used to verify the app.
+
 
 ## Model checkpoint
 
@@ -37,7 +64,7 @@ The trained eight-frame checkpoint is available as a separate GitHub Release ass
 
 Download the file and place it at `checkpoints/best_8frames.pth` (next to `checkpoints/README.md`). The app loads it from this path at startup. The checkpoint should contain `model_state_dict` and `class_to_idx` and may include `num_frames`.
 
-The `.pth` file is intentionally **not committed to Git history**. Use only trusted checkpoints; this model file has been uploaded as an asset, but clean-environment loading and end-to-end inference have not yet been independently verified.
+The `.pth` file is intentionally **not committed to Git history**. Use only trusted checkpoints; this model file has been uploaded as a Release asset. End-to-end inference has succeeded in the original working Conda environment; fresh-install verification remains outstanding.
 
 ## Run interactive local demo
 
