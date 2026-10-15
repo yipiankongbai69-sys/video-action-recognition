@@ -1,0 +1,10 @@
+name: video-action-repro
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+# Install PyTorch/Torchvision separately using the appropriate official
+# PyTorch package index for your CUDA or CPU target; see README.
+# This file defines a clean base environment. Reproduction from scratch
+# has not yet been validated.
